@@ -7,6 +7,10 @@ package es.albarregas.persistencia;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -80,6 +84,63 @@ public class AccesoBD extends HttpServlet {
      *
      * @return a String containing servlet description
      */
+    
+    Connection conexion = null;
+    Statement stm = null; // instrucción de consulta
+    ResultSet rset = null; // conjunto de resultados
+    Ave ave=null;
+    List<Ave> aves=null;
+	
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			String BaseDeDatos = "jdbc:mysql://localhost/pruebasjava\",\"root\", \"albarregas\"";
+			conexion = DriverManager.getConnection(BaseDeDatos,"java2019","2019");
+			stm=conexion.createStatement();
+			rset=stm.executeQuery("select * from aves where anilla=?");
+			ResultSetMetaData metaDatos = rset.getMetaData();
+			
+		// Creamos un array unidimensional con los títulos de las columnas
+			Object[] columnas = {metaDatos.getColumnName(1),metaDatos.getColumnName(2),metaDatos.getColumnName(3)};
+			
+			while ( rset.next() ) {
+			// Se añade un elemento <Persona> a la colección por cada fila del resultado
+				personas.add(new Persona(rset.getObject(1).toString(),rset.getObject(2).toString(),rset.getObject(3).toString()));			
+			} // fin de while
+			
+		// Creamos un array bidimensional con los datos de la colección.		
+			Object[][] filas = new Object[personas.size()][3];
+			for ( int x = 0;x < personas.size(); x++ ){
+				filas[x][0]=personas.get(x).getNumero();	
+				filas[x][1]=personas.get(x).getNombre();		
+				filas[x][2]=personas.get(x).getCategoria();					
+			}
+// Se crea objeto de tipo Jtable
+			JTable tabla = new JTable(filas,columnas);
+			
+// Se crea objeto de tipo Vista
+			@SuppressWarnings("unused")
+			Vista miVista = new Vista(tabla);
+		}catch ( SQLException excepcionSql ){
+				System.out.println("Excepción:"+excepcionSql);
+		} // fin de catch
+		catch ( ClassNotFoundException noEncontroClase ){
+			System.out.println("Excepción:"+noEncontroClase);
+		} // fin de catch
+		catch ( Exception excepcion ){
+			System.out.println("Excepción:"+excepcion);
+		} // fin de catch
+		finally{
+			try {
+				rset.close();
+				stm.close();
+				conexion.close();
+			} // fin de try
+			catch ( Exception e ) {
+				System.out.println("Excepción:"+e);
+			} // fin de catch
+		} // fin de finally	
+	}
+    
     @Override
     public String getServletInfo() {
         return "Short description";
